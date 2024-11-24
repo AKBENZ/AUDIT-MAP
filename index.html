@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title>AKR-AUDIT</title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="data/France_MerFrance_metropolitaine_1.js"></script>
+        <script src="data/N_zone_exclusion_technique_eol_pose_MerFrance_2.js"></script>
+        <script src="data/N_zone_exclusion_technique_eol_flottant_MerFrance_3.js"></script>
+        <script src="data/Courbe_niveau_MerFrance_4.js"></script>
+        <script src="data/Dpartements_5.js"></script>
+        <script src="data/ChanelMerFrance_6.js"></script>
+        <script src="data/SmaphorestationdegradecteMerFrance_7.js"></script>
+        <script src="data/eol_mer_epsg2154_202403_8.js"></script>
+        <script src="data/AO6_ETUDES_20230620_9.js"></script>
+        <script src="data/AO6_DM_20230620_10.js"></script>
+        <script src="data/AO6_Extensions_20231120_11.js"></script>
+        <script src="data/AO6_20231120_12.js"></script>
+        <script src="data/Intercbles_13.js"></script>
+        <script src="data/position_eoliennes_14.js"></script>
+        <script src="data/OSS_15.js"></script>
+        <script src="data/Tampon2km_16.js"></script>
+        <script src="data/Tampon1km_17.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        })
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var title = new L.Control({'position':'topright'});
+        title.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+        title.update = function () {
+            this._div.innerHTML = '<h2>AKR-AUDIT</h2>';
+        };
+        title.addTo(map);
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            if (bounds_group.getLayers().length) {
+                map.fitBounds(bounds_group.getBounds());
+            }
+        }
+        map.createPane('pane_OSMStandard_0');
+        map.getPane('pane_OSMStandard_0').style.zIndex = 400;
+        var layer_OSMStandard_0 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_0;
+        map.addLayer(layer_OSMStandard_0);
+        function pop_France_MerFrance_metropolitaine_1(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FIPS'] !== null ? autolinker.link(feature.properties['FIPS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ISO2'] !== null ? autolinker.link(feature.properties['ISO2'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ISO3'] !== null ? autolinker.link(feature.properties['ISO3'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['UN'] !== null ? autolinker.link(feature.properties['UN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME'] !== null ? autolinker.link(feature.properties['NAME'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['AREA'] !== null ? autolinker.link(feature.properties['AREA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['POP2005'] !== null ? autolinker.link(feature.properties['POP2005'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REGION'] !== null ? autolinker.link(feature.properties['REGION'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SUBREGION'] !== null ? autolinker.link(feature.properties['SUBREGION'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LON'] !== null ? autolinker.link(feature.properties['LON'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LAT'] !== null ? autolinker.link(feature.properties['LAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_France_MerFrance_metropolitaine_1_0() {
+            return {
+                pane: 'pane_France_MerFrance_metropolitaine_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(19,225,208,0.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_France_MerFrance_metropolitaine_1');
+        map.getPane('pane_France_MerFrance_metropolitaine_1').style.zIndex = 401;
+        map.getPane('pane_France_MerFrance_metropolitaine_1').style['mix-blend-mode'] = 'normal';
+        var layer_France_MerFrance_metropolitaine_1 = new L.geoJson(json_France_MerFrance_metropolitaine_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_France_MerFrance_metropolitaine_1',
+            layerName: 'layer_France_MerFrance_metropolitaine_1',
+            pane: 'pane_France_MerFrance_metropolitaine_1',
+            onEachFeature: pop_France_MerFrance_metropolitaine_1,
+            style: style_France_MerFrance_metropolitaine_1_0,
+        });
+        bounds_group.addLayer(layer_France_MerFrance_metropolitaine_1);
+        map.addLayer(layer_France_MerFrance_metropolitaine_1);
+        function pop_N_zone_exclusion_technique_eol_pose_MerFrance_2(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(feature.properties['Id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_N_zone_exclusion_technique_eol_pose_MerFrance_2_0() {
+            return {
+                pane: 'pane_N_zone_exclusion_technique_eol_pose_MerFrance_2',
+                opacity: 1,
+                color: 'rgba(247,225,55,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(247,247,208,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_N_zone_exclusion_technique_eol_pose_MerFrance_2');
+        map.getPane('pane_N_zone_exclusion_technique_eol_pose_MerFrance_2').style.zIndex = 402;
+        map.getPane('pane_N_zone_exclusion_technique_eol_pose_MerFrance_2').style['mix-blend-mode'] = 'normal';
+        var layer_N_zone_exclusion_technique_eol_pose_MerFrance_2 = new L.geoJson(json_N_zone_exclusion_technique_eol_pose_MerFrance_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_N_zone_exclusion_technique_eol_pose_MerFrance_2',
+            layerName: 'layer_N_zone_exclusion_technique_eol_pose_MerFrance_2',
+            pane: 'pane_N_zone_exclusion_technique_eol_pose_MerFrance_2',
+            onEachFeature: pop_N_zone_exclusion_technique_eol_pose_MerFrance_2,
+            style: style_N_zone_exclusion_technique_eol_pose_MerFrance_2_0,
+        });
+        bounds_group.addLayer(layer_N_zone_exclusion_technique_eol_pose_MerFrance_2);
+        map.addLayer(layer_N_zone_exclusion_technique_eol_pose_MerFrance_2);
+        function pop_N_zone_exclusion_technique_eol_flottant_MerFrance_3(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? autolinker.link(feature.properties['OBJECTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_N_zone_exclusion_technique_eol_flottant_MerFrance_3_0() {
+            return {
+                pane: 'pane_N_zone_exclusion_technique_eol_flottant_MerFrance_3',
+                opacity: 1,
+                color: 'rgba(128,14,16,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(232,182,183,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_N_zone_exclusion_technique_eol_flottant_MerFrance_3');
+        map.getPane('pane_N_zone_exclusion_technique_eol_flottant_MerFrance_3').style.zIndex = 403;
+        map.getPane('pane_N_zone_exclusion_technique_eol_flottant_MerFrance_3').style['mix-blend-mode'] = 'normal';
+        var layer_N_zone_exclusion_technique_eol_flottant_MerFrance_3 = new L.geoJson(json_N_zone_exclusion_technique_eol_flottant_MerFrance_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_N_zone_exclusion_technique_eol_flottant_MerFrance_3',
+            layerName: 'layer_N_zone_exclusion_technique_eol_flottant_MerFrance_3',
+            pane: 'pane_N_zone_exclusion_technique_eol_flottant_MerFrance_3',
+            onEachFeature: pop_N_zone_exclusion_technique_eol_flottant_MerFrance_3,
+            style: style_N_zone_exclusion_technique_eol_flottant_MerFrance_3_0,
+        });
+        bounds_group.addLayer(layer_N_zone_exclusion_technique_eol_flottant_MerFrance_3);
+        map.addLayer(layer_N_zone_exclusion_technique_eol_flottant_MerFrance_3);
+        function pop_Courbe_niveau_MerFrance_4(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Elevation</th>\
+                        <td>' + (feature.properties['Elevation'] !== null ? autolinker.link(feature.properties['Elevation'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Courbe_niveau_MerFrance_4_0() {
+            return {
+                pane: 'pane_Courbe_niveau_MerFrance_4',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Courbe_niveau_MerFrance_4');
+        map.getPane('pane_Courbe_niveau_MerFrance_4').style.zIndex = 404;
+        map.getPane('pane_Courbe_niveau_MerFrance_4').style['mix-blend-mode'] = 'normal';
+        var layer_Courbe_niveau_MerFrance_4 = new L.geoJson(json_Courbe_niveau_MerFrance_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Courbe_niveau_MerFrance_4',
+            layerName: 'layer_Courbe_niveau_MerFrance_4',
+            pane: 'pane_Courbe_niveau_MerFrance_4',
+            onEachFeature: pop_Courbe_niveau_MerFrance_4,
+            style: style_Courbe_niveau_MerFrance_4_0,
+        });
+        bounds_group.addLayer(layer_Courbe_niveau_MerFrance_4);
+        map.addLayer(layer_Courbe_niveau_MerFrance_4);
+        function pop_Dpartements_5(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['year'] !== null ? autolinker.link(feature.properties['year'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['reg_code'] !== null ? autolinker.link(feature.properties['reg_code'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">reg_name</th>\
+                        <td>' + (feature.properties['reg_name'] !== null ? autolinker.link(feature.properties['reg_name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_code'] !== null ? autolinker.link(feature.properties['dep_code'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_curren'] !== null ? autolinker.link(feature.properties['dep_curren'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_name'] !== null ? autolinker.link(feature.properties['dep_name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_name_u'] !== null ? autolinker.link(feature.properties['dep_name_u'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_name_l'] !== null ? autolinker.link(feature.properties['dep_name_l'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_area_c'] !== null ? autolinker.link(feature.properties['dep_area_c'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_type'] !== null ? autolinker.link(feature.properties['dep_type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_status'] !== null ? autolinker.link(feature.properties['dep_status'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_siren_'] !== null ? autolinker.link(feature.properties['dep_siren_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dep_is_ctu'] !== null ? autolinker.link(feature.properties['dep_is_ctu'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Dpartements_5_0() {
+            return {
+                pane: 'pane_Dpartements_5',
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '15.0,3.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Dpartements_5');
+        map.getPane('pane_Dpartements_5').style.zIndex = 405;
+        map.getPane('pane_Dpartements_5').style['mix-blend-mode'] = 'normal';
+        var layer_Dpartements_5 = new L.geoJson(json_Dpartements_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Dpartements_5',
+            layerName: 'layer_Dpartements_5',
+            pane: 'pane_Dpartements_5',
+            onEachFeature: pop_Dpartements_5,
+            style: style_Dpartements_5_0,
+        });
+        bounds_group.addLayer(layer_Dpartements_5);
+        map.addLayer(layer_Dpartements_5);
+        function pop_ChanelMerFrance_6(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['inspireId'] !== null ? autolinker.link(feature.properties['inspireId'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DRVAL1'] !== null ? autolinker.link(feature.properties['DRVAL1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ORIENT'] !== null ? autolinker.link(feature.properties['ORIENT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TRAFIC'] !== null ? autolinker.link(feature.properties['TRAFIC'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['RESTRN'] !== null ? autolinker.link(feature.properties['RESTRN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STATUS'] !== null ? autolinker.link(feature.properties['STATUS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OBJNAM</th>\
+                        <td>' + (feature.properties['OBJNAM'] !== null ? autolinker.link(feature.properties['OBJNAM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NOBJNM'] !== null ? autolinker.link(feature.properties['NOBJNM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['INFORM'] !== null ? autolinker.link(feature.properties['INFORM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NINFOM'] !== null ? autolinker.link(feature.properties['NINFOM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_ChanelMerFrance_6_0() {
+            return {
+                pane: 'pane_ChanelMerFrance_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(145,82,45,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_ChanelMerFrance_6');
+        map.getPane('pane_ChanelMerFrance_6').style.zIndex = 406;
+        map.getPane('pane_ChanelMerFrance_6').style['mix-blend-mode'] = 'normal';
+        var layer_ChanelMerFrance_6 = new L.geoJson(json_ChanelMerFrance_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ChanelMerFrance_6',
+            layerName: 'layer_ChanelMerFrance_6',
+            pane: 'pane_ChanelMerFrance_6',
+            onEachFeature: pop_ChanelMerFrance_6,
+            style: style_ChanelMerFrance_6_0,
+        });
+        bounds_group.addLayer(layer_ChanelMerFrance_6);
+        map.addLayer(layer_ChanelMerFrance_6);
+        function pop_SmaphorestationdegradecteMerFrance_7(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['inspireId'] !== null ? autolinker.link(feature.properties['inspireId'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PEREND'] !== null ? autolinker.link(feature.properties['PEREND'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PERSTA'] !== null ? autolinker.link(feature.properties['PERSTA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STATUS'] !== null ? autolinker.link(feature.properties['STATUS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OBJNAM</th>\
+                        <td>' + (feature.properties['OBJNAM'] !== null ? autolinker.link(feature.properties['OBJNAM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NOBJNM'] !== null ? autolinker.link(feature.properties['NOBJNM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['INFORM'] !== null ? autolinker.link(feature.properties['INFORM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NINFOM'] !== null ? autolinker.link(feature.properties['NINFOM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_SmaphorestationdegradecteMerFrance_7_0() {
+            return {
+                pane: 'pane_SmaphorestationdegradecteMerFrance_7',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/SmaphorestationdegradecteMerFrance_7.svg',
+            iconSize: [15.2, 15.2]
+        }),
+                interactive: true,
+            }
+        }
+        map.createPane('pane_SmaphorestationdegradecteMerFrance_7');
+        map.getPane('pane_SmaphorestationdegradecteMerFrance_7').style.zIndex = 407;
+        map.getPane('pane_SmaphorestationdegradecteMerFrance_7').style['mix-blend-mode'] = 'normal';
+        var layer_SmaphorestationdegradecteMerFrance_7 = new L.geoJson(json_SmaphorestationdegradecteMerFrance_7, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_SmaphorestationdegradecteMerFrance_7',
+            layerName: 'layer_SmaphorestationdegradecteMerFrance_7',
+            pane: 'pane_SmaphorestationdegradecteMerFrance_7',
+            onEachFeature: pop_SmaphorestationdegradecteMerFrance_7,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_SmaphorestationdegradecteMerFrance_7_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_SmaphorestationdegradecteMerFrance_7);
+        map.addLayer(layer_SmaphorestationdegradecteMerFrance_7);
+        function pop_eol_mer_epsg2154_202403_8(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Site</th>\
+                        <td>' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Descriptio</th>\
+                        <td>' + (feature.properties['Descriptio'] !== null ? autolinker.link(feature.properties['Descriptio'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Type_zone</th>\
+                        <td>' + (feature.properties['Type_zone'] !== null ? autolinker.link(feature.properties['Type_zone'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['AO'] !== null ? autolinker.link(feature.properties['AO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Technologi'] !== null ? autolinker.link(feature.properties['Technologi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Texte_refe'] !== null ? autolinker.link(feature.properties['Texte_refe'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['surface'] !== null ? autolinker.link(feature.properties['surface'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['classement'] !== null ? autolinker.link(feature.properties['classement'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_eol_mer_epsg2154_202403_8_0(feature) {
+            switch(String(feature.properties['AO'])) {
+                case '1':
+                    return {
+                pane: 'pane_eol_mer_epsg2154_202403_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.506)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(100,141,218,0.506)',
+                interactive: true,
+            }
+                    break;
+                case '2':
+                    return {
+                pane: 'pane_eol_mer_epsg2154_202403_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.506)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(203,134,14,0.506)',
+                interactive: true,
+            }
+                    break;
+                case '3':
+                    return {
+                pane: 'pane_eol_mer_epsg2154_202403_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.506)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(227,112,108,0.506)',
+                interactive: true,
+            }
+                    break;
+                case '4':
+                    return {
+                pane: 'pane_eol_mer_epsg2154_202403_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.506)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(136,232,179,0.506)',
+                interactive: true,
+            }
+                    break;
+                case '5':
+                    return {
+                pane: 'pane_eol_mer_epsg2154_202403_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.506)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(79,36,207,0.506)',
+                interactive: true,
+            }
+                    break;
+                case '6':
+                    return {
+                pane: 'pane_eol_mer_epsg2154_202403_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.506)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(53,235,21,0.506)',
+                interactive: true,
+            }
+                    break;
+                case '7':
+                    return {
+                pane: 'pane_eol_mer_epsg2154_202403_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.506)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(59,231,240,0.506)',
+                interactive: true,
+            }
+                    break;
+                case '8':
+                    return {
+                pane: 'pane_eol_mer_epsg2154_202403_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.506)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,74,228,0.506)',
+                interactive: true,
+            }
+                    break;
+                case 'AAP fermes pilotes':
+                    return {
+                pane: 'pane_eol_mer_epsg2154_202403_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.506)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(178,203,103,0.506)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_eol_mer_epsg2154_202403_8');
+        map.getPane('pane_eol_mer_epsg2154_202403_8').style.zIndex = 408;
+        map.getPane('pane_eol_mer_epsg2154_202403_8').style['mix-blend-mode'] = 'normal';
+        var layer_eol_mer_epsg2154_202403_8 = new L.geoJson(json_eol_mer_epsg2154_202403_8, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_eol_mer_epsg2154_202403_8',
+            layerName: 'layer_eol_mer_epsg2154_202403_8',
+            pane: 'pane_eol_mer_epsg2154_202403_8',
+            onEachFeature: pop_eol_mer_epsg2154_202403_8,
+            style: style_eol_mer_epsg2154_202403_8_0,
+        });
+        bounds_group.addLayer(layer_eol_mer_epsg2154_202403_8);
+        map.addLayer(layer_eol_mer_epsg2154_202403_8);
+        function pop_AO6_ETUDES_20230620_9(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ZONE'] !== null ? autolinker.link(feature.properties['ZONE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_AO6_ETUDES_20230620_9_0() {
+            return {
+                pane: 'pane_AO6_ETUDES_20230620_9',
+                opacity: 1,
+                color: 'rgba(75,106,56,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(75,106,56,0.10196078431372549)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_AO6_ETUDES_20230620_9');
+        map.getPane('pane_AO6_ETUDES_20230620_9').style.zIndex = 409;
+        map.getPane('pane_AO6_ETUDES_20230620_9').style['mix-blend-mode'] = 'normal';
+        var layer_AO6_ETUDES_20230620_9 = new L.geoJson(json_AO6_ETUDES_20230620_9, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_AO6_ETUDES_20230620_9',
+            layerName: 'layer_AO6_ETUDES_20230620_9',
+            pane: 'pane_AO6_ETUDES_20230620_9',
+            onEachFeature: pop_AO6_ETUDES_20230620_9,
+            style: style_AO6_ETUDES_20230620_9_0,
+        });
+        bounds_group.addLayer(layer_AO6_ETUDES_20230620_9);
+        map.addLayer(layer_AO6_ETUDES_20230620_9);
+        function pop_AO6_DM_20230620_10(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ZONE'] !== null ? autolinker.link(feature.properties['ZONE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_AO6_DM_20230620_10_0(feature) {
+            switch(String(feature.properties['ZONE'])) {
+                case 'Zone 1':
+                    return {
+                pane: 'pane_AO6_DM_20230620_10',
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(227,26,28,0.10196078431372549)',
+                interactive: true,
+            }
+                    break;
+                case 'Zone 2':
+                    return {
+                pane: 'pane_AO6_DM_20230620_10',
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(227,26,28,0.10196078431372549)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_AO6_DM_20230620_10');
+        map.getPane('pane_AO6_DM_20230620_10').style.zIndex = 410;
+        map.getPane('pane_AO6_DM_20230620_10').style['mix-blend-mode'] = 'normal';
+        var layer_AO6_DM_20230620_10 = new L.geoJson(json_AO6_DM_20230620_10, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_AO6_DM_20230620_10',
+            layerName: 'layer_AO6_DM_20230620_10',
+            pane: 'pane_AO6_DM_20230620_10',
+            onEachFeature: pop_AO6_DM_20230620_10,
+            style: style_AO6_DM_20230620_10_0,
+        });
+        bounds_group.addLayer(layer_AO6_DM_20230620_10);
+        map.addLayer(layer_AO6_DM_20230620_10);
+        function pop_AO6_Extensions_20231120_11(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ZONE'] !== null ? autolinker.link(feature.properties['ZONE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DESCRIPTIF'] !== null ? autolinker.link(feature.properties['DESCRIPTIF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_AO6_Extensions_20231120_11_0() {
+            return {
+                pane: 'pane_AO6_Extensions_20231120_11',
+                opacity: 1,
+                color: 'rgba(31,120,180,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(31,120,180,0.5019607843137255)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_AO6_Extensions_20231120_11');
+        map.getPane('pane_AO6_Extensions_20231120_11').style.zIndex = 411;
+        map.getPane('pane_AO6_Extensions_20231120_11').style['mix-blend-mode'] = 'normal';
+        var layer_AO6_Extensions_20231120_11 = new L.geoJson(json_AO6_Extensions_20231120_11, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_AO6_Extensions_20231120_11',
+            layerName: 'layer_AO6_Extensions_20231120_11',
+            pane: 'pane_AO6_Extensions_20231120_11',
+            onEachFeature: pop_AO6_Extensions_20231120_11,
+            style: style_AO6_Extensions_20231120_11_0,
+        });
+        bounds_group.addLayer(layer_AO6_Extensions_20231120_11);
+        map.addLayer(layer_AO6_Extensions_20231120_11);
+        function pop_AO6_20231120_12(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ZONE'] !== null ? autolinker.link(feature.properties['ZONE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DESCRIPTIF'] !== null ? autolinker.link(feature.properties['DESCRIPTIF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_AO6_20231120_12_0() {
+            return {
+                pane: 'pane_AO6_20231120_12',
+                opacity: 1,
+                color: 'rgba(8,48,107,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(8,48,107,0.5019607843137255)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_AO6_20231120_12');
+        map.getPane('pane_AO6_20231120_12').style.zIndex = 412;
+        map.getPane('pane_AO6_20231120_12').style['mix-blend-mode'] = 'normal';
+        var layer_AO6_20231120_12 = new L.geoJson(json_AO6_20231120_12, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_AO6_20231120_12',
+            layerName: 'layer_AO6_20231120_12',
+            pane: 'pane_AO6_20231120_12',
+            onEachFeature: pop_AO6_20231120_12,
+            style: style_AO6_20231120_12_0,
+        });
+        bounds_group.addLayer(layer_AO6_20231120_12);
+        map.addLayer(layer_AO6_20231120_12);
+        function pop_Intercbles_13(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['id'] !== null ? autolinker.link(feature.properties['id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Nature</th>\
+                        <td>' + (feature.properties['Nature'] !== null ? autolinker.link(feature.properties['Nature'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Liaisons'] !== null ? autolinker.link(feature.properties['Liaisons'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Intercbles_13_0(feature) {
+            switch(String(feature.properties['Nature'])) {
+                case 'câble inter-éolien':
+                    return {
+                pane: 'pane_Intercbles_13',
+                opacity: 1,
+                color: 'rgba(232,25,28,1.0)',
+                dashArray: '8.0,4.0',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'câble sous-marin':
+                    return {
+                pane: 'pane_Intercbles_13',
+                opacity: 1,
+                color: 'rgba(51,160,44,1.0)',
+                dashArray: '4.0,2.0',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Intercbles_13');
+        map.getPane('pane_Intercbles_13').style.zIndex = 413;
+        map.getPane('pane_Intercbles_13').style['mix-blend-mode'] = 'normal';
+        var layer_Intercbles_13 = new L.geoJson(json_Intercbles_13, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Intercbles_13',
+            layerName: 'layer_Intercbles_13',
+            pane: 'pane_Intercbles_13',
+            onEachFeature: pop_Intercbles_13,
+            style: style_Intercbles_13_0,
+        });
+        bounds_group.addLayer(layer_Intercbles_13);
+        map.addLayer(layer_Intercbles_13);
+        function pop_position_eoliennes_14(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID'] !== null ? autolinker.link(feature.properties['ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Turbine_Na</th>\
+                        <td>' + (feature.properties['Turbine_Na'] !== null ? autolinker.link(feature.properties['Turbine_Na'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Site</th>\
+                        <td>' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Structure'] !== null ? autolinker.link(feature.properties['Structure'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['X_DD'] !== null ? autolinker.link(feature.properties['X_DD'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Y_DD'] !== null ? autolinker.link(feature.properties['Y_DD'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_position_eoliennes_14_0(feature) {
+            switch(String(feature.properties['Structure'])) {
+                case 'EOLIENNE':
+                    return {
+                pane: 'pane_position_eoliennes_14',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/position_eoliennes_14.svg',
+            iconSize: [30.4, 30.4]
+        }),
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_position_eoliennes_14');
+        map.getPane('pane_position_eoliennes_14').style.zIndex = 414;
+        map.getPane('pane_position_eoliennes_14').style['mix-blend-mode'] = 'normal';
+        var layer_position_eoliennes_14 = new L.geoJson(json_position_eoliennes_14, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_position_eoliennes_14',
+            layerName: 'layer_position_eoliennes_14',
+            pane: 'pane_position_eoliennes_14',
+            onEachFeature: pop_position_eoliennes_14,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_position_eoliennes_14_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_position_eoliennes_14);
+        map.addLayer(layer_position_eoliennes_14);
+        function pop_OSS_15(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID'] !== null ? autolinker.link(feature.properties['ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Turbine_Na</th>\
+                        <td>' + (feature.properties['Turbine_Na'] !== null ? autolinker.link(feature.properties['Turbine_Na'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Site</th>\
+                        <td>' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Structure'] !== null ? autolinker.link(feature.properties['Structure'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['X_DD'] !== null ? autolinker.link(feature.properties['X_DD'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Y_DD'] !== null ? autolinker.link(feature.properties['Y_DD'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_OSS_15_0(feature) {
+            switch(String(feature.properties['Structure'])) {
+                case 'POSTE ELECTRIQUE EN MER':
+                    return {
+                pane: 'pane_OSS_15',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/OSS_15.svg',
+            iconSize: [38.0, 38.0]
+        }),
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_OSS_15');
+        map.getPane('pane_OSS_15').style.zIndex = 415;
+        map.getPane('pane_OSS_15').style['mix-blend-mode'] = 'normal';
+        var layer_OSS_15 = new L.geoJson(json_OSS_15, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_OSS_15',
+            layerName: 'layer_OSS_15',
+            pane: 'pane_OSS_15',
+            onEachFeature: pop_OSS_15,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_OSS_15_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_OSS_15);
+        map.addLayer(layer_OSS_15);
+        function pop_Tampon2km_16(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID'] !== null ? autolinker.link(feature.properties['ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Nb_Elionne</th>\
+                        <td>' + (feature.properties['Nb_Elionne'] !== null ? autolinker.link(feature.properties['Nb_Elionne'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Portée</th>\
+                        <td>' + (feature.properties['Portée'] !== null ? autolinker.link(feature.properties['Portée'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Tampon2km_16_0() {
+            return {
+                pane: 'pane_Tampon2km_16',
+                opacity: 1,
+                color: 'rgba(51,160,44,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(229,182,54,0.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Tampon2km_16');
+        map.getPane('pane_Tampon2km_16').style.zIndex = 416;
+        map.getPane('pane_Tampon2km_16').style['mix-blend-mode'] = 'normal';
+        var layer_Tampon2km_16 = new L.geoJson(json_Tampon2km_16, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Tampon2km_16',
+            layerName: 'layer_Tampon2km_16',
+            pane: 'pane_Tampon2km_16',
+            onEachFeature: pop_Tampon2km_16,
+            style: style_Tampon2km_16_0,
+        });
+        bounds_group.addLayer(layer_Tampon2km_16);
+        map.addLayer(layer_Tampon2km_16);
+        function pop_Tampon1km_17(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID'] !== null ? autolinker.link(feature.properties['ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Portée'] !== null ? autolinker.link(feature.properties['Portée'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Nb_Eolienn</th>\
+                        <td>' + (feature.properties['Nb_Eolienn'] !== null ? autolinker.link(feature.properties['Nb_Eolienn'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Site</th>\
+                        <td>' + (feature.properties['Site'] !== null ? autolinker.link(feature.properties['Site'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Tampon1km_17_0() {
+            return {
+                pane: 'pane_Tampon1km_17',
+                opacity: 1,
+                color: 'rgba(232,25,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,158,23,0.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Tampon1km_17');
+        map.getPane('pane_Tampon1km_17').style.zIndex = 417;
+        map.getPane('pane_Tampon1km_17').style['mix-blend-mode'] = 'normal';
+        var layer_Tampon1km_17 = new L.geoJson(json_Tampon1km_17, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Tampon1km_17',
+            layerName: 'layer_Tampon1km_17',
+            pane: 'pane_Tampon1km_17',
+            onEachFeature: pop_Tampon1km_17,
+            style: style_Tampon1km_17_0,
+        });
+        bounds_group.addLayer(layer_Tampon1km_17);
+        map.addLayer(layer_Tampon1km_17);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        var overlaysTree = [
+            {label: '<img src="legend/Tampon1km_17.png" /> Tampon 1km', layer: layer_Tampon1km_17},
+            {label: '<img src="legend/Tampon2km_16.png" /> Tampon 2km', layer: layer_Tampon2km_16},
+        {label: '<b>PARC OFFSHORE SAINT NAZAIRE</b>', selectAllCheckbox: true, children: [
+            {label: 'OSS<br /><table><tr><td style="text-align: center;"><img src="legend/OSS_15_POSTEELECTRIQUEENMER0.png" /></td><td>POSTE ELECTRIQUE EN MER</td></tr></table>', layer: layer_OSS_15},
+            {label: 'position_eoliennes<br /><table><tr><td style="text-align: center;"><img src="legend/position_eoliennes_14_EOLIENNE0.png" /></td><td>EOLIENNE</td></tr></table>', layer: layer_position_eoliennes_14},
+            {label: 'Intercâbles<br /><table><tr><td style="text-align: center;"><img src="legend/Intercbles_13_câbleinteréolien0.png" /></td><td>câble inter-éolien</td></tr><tr><td style="text-align: center;"><img src="legend/Intercbles_13_câblesousmarin1.png" /></td><td>câble sous-marin</td></tr></table>', layer: layer_Intercbles_13},]},
+        {label: '<b>ZONES_AO6</b>', selectAllCheckbox: true, children: [
+            {label: '<img src="legend/AO6_20231120_12.png" /> AO6_20231120', layer: layer_AO6_20231120_12},
+            {label: '<img src="legend/AO6_Extensions_20231120_11.png" /> AO6_Extensions_20231120', layer: layer_AO6_Extensions_20231120_11},
+            {label: 'AO6_DM_20230620<br /><table><tr><td style="text-align: center;"><img src="legend/AO6_DM_20230620_10_Zone10.png" /></td><td>Zone 1</td></tr><tr><td style="text-align: center;"><img src="legend/AO6_DM_20230620_10_Zone21.png" /></td><td>Zone 2</td></tr></table>', layer: layer_AO6_DM_20230620_10},
+            {label: '<img src="legend/AO6_ETUDES_20230620_9.png" /> AO6_ETUDES_20230620', layer: layer_AO6_ETUDES_20230620_9},
+            {label: 'eol_mer_epsg2154_202403<br /><table><tr><td style="text-align: center;"><img src="legend/eol_mer_epsg2154_202403_8_10.png" /></td><td>1</td></tr><tr><td style="text-align: center;"><img src="legend/eol_mer_epsg2154_202403_8_21.png" /></td><td>2</td></tr><tr><td style="text-align: center;"><img src="legend/eol_mer_epsg2154_202403_8_32.png" /></td><td>3</td></tr><tr><td style="text-align: center;"><img src="legend/eol_mer_epsg2154_202403_8_43.png" /></td><td>4</td></tr><tr><td style="text-align: center;"><img src="legend/eol_mer_epsg2154_202403_8_54.png" /></td><td>5</td></tr><tr><td style="text-align: center;"><img src="legend/eol_mer_epsg2154_202403_8_65.png" /></td><td>6</td></tr><tr><td style="text-align: center;"><img src="legend/eol_mer_epsg2154_202403_8_76.png" /></td><td>7</td></tr><tr><td style="text-align: center;"><img src="legend/eol_mer_epsg2154_202403_8_87.png" /></td><td>8</td></tr><tr><td style="text-align: center;"><img src="legend/eol_mer_epsg2154_202403_8_AAPfermespilotes8.png" /></td><td>AAP fermes pilotes</td></tr></table>', layer: layer_eol_mer_epsg2154_202403_8},]},
+        {label: '<b>group2</b>', selectAllCheckbox: true, children: [
+            {label: '<img src="legend/SmaphorestationdegradecteMerFrance_7.png" /> Sémaphore, station de grade-côte MerFrance', layer: layer_SmaphorestationdegradecteMerFrance_7},
+            {label: '<img src="legend/ChanelMerFrance_6.png" /> Chanel MerFrance', layer: layer_ChanelMerFrance_6},
+            {label: '<img src="legend/Dpartements_5.png" /> Départements', layer: layer_Dpartements_5},
+            {label: '<img src="legend/Courbe_niveau_MerFrance_4.png" /> Courbe_niveau_MerFrance', layer: layer_Courbe_niveau_MerFrance_4},
+            {label: '<img src="legend/N_zone_exclusion_technique_eol_flottant_MerFrance_3.png" /> N_zone_exclusion_technique_eol_flottant_MerFrance', layer: layer_N_zone_exclusion_technique_eol_flottant_MerFrance_3},
+            {label: '<img src="legend/N_zone_exclusion_technique_eol_pose_MerFrance_2.png" /> N_zone_exclusion_technique_eol_pose_MerFrance', layer: layer_N_zone_exclusion_technique_eol_pose_MerFrance_2},
+            {label: '<img src="legend/France_MerFrance_metropolitaine_1.png" /> France_MerFrance_metropolitaine', layer: layer_France_MerFrance_metropolitaine_1},]},
+            {label: "OSM Standard", layer: layer_OSMStandard_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: false, 
+        });
+        lay.addTo(map);
+		document.addEventListener("DOMContentLoaded", function() {
+            // set new Layers List height which considers toggle icon
+            function newLayersListHeight() {
+                var layerScrollbarElement = document.querySelector('.leaflet-control-layers-scrollbar');
+                if (layerScrollbarElement) {
+                    var layersListElement = document.querySelector('.leaflet-control-layers-list');
+                    var originalHeight = layersListElement.style.height 
+                        || window.getComputedStyle(layersListElement).height;
+                    var newHeight = parseFloat(originalHeight) - 50;
+                    layersListElement.style.height = newHeight + 'px';
+                }
+            }
+            var isLayersListExpanded = true;
+            var controlLayersElement = document.querySelector('.leaflet-control-layers');
+            var toggleLayerControl = document.querySelector('.leaflet-control-layers-toggle');
+            // toggle Collapsed/Expanded and apply new Layers List height
+            toggleLayerControl.addEventListener('click', function() {
+                if (isLayersListExpanded) {
+                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+                } else {
+                    controlLayersElement.classList.add('leaflet-control-layers-expanded');
+                }
+                isLayersListExpanded = !isLayersListExpanded;
+                newLayersListHeight()
+            });	
+			// apply new Layers List height if toggle layerstree
+			if (controlLayersElement) {
+				controlLayersElement.addEventListener('click', function(event) {
+					var toggleLayerHeaderPointer = event.target.closest('.leaflet-layerstree-header-pointer span');
+					if (toggleLayerHeaderPointer) {
+						newLayersListHeight();
+					}
+				});
+			}
+            // Collapsed/Expanded at Start to apply new height
+            setTimeout(function() {
+                toggleLayerControl.click();
+            }, 10);
+            setTimeout(function() {
+                toggleLayerControl.click();
+            }, 10);
+            // Collapsed touch/small screen
+            var isSmallScreen = window.innerWidth < 650;
+            if (isSmallScreen) {
+                setTimeout(function() {
+                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+                    isLayersListExpanded = !isLayersListExpanded;
+                }, 500);
+            }  
+        });       
+        map.on("zoomend", function(){
+
+                if (map.hasLayer(layer_position_eoliennes_14)) {
+                    if (map.getZoom() <= 13 && map.getZoom() >= 19) {
+                        layer_position_eoliennes_14.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_position_eoliennes_14.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+                if (map.hasLayer(layer_OSS_15)) {
+                    if (map.getZoom() <= 13 && map.getZoom() >= 19) {
+                        layer_OSS_15.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_OSS_15.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+        });
+        setBounds();
+        var i = 0;
+        layer_position_eoliennes_14.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['ID'] !== null?String('<div style="color: #323232; font-size: 8pt; font-family: \'Arial\', sans-serif;">' + layer.feature.properties['ID']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_position_eoliennes_14'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_OSS_15.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['ID'] !== null?String('<div style="color: #323232; font-size: 8pt; font-family: \'Arial\', sans-serif;">' + layer.feature.properties['ID']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_OSS_15'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+                if (map.hasLayer(layer_position_eoliennes_14)) {
+                    if (map.getZoom() <= 13 && map.getZoom() >= 19) {
+                        layer_position_eoliennes_14.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_position_eoliennes_14.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+                if (map.hasLayer(layer_OSS_15)) {
+                    if (map.getZoom() <= 13 && map.getZoom() >= 19) {
+                        layer_OSS_15.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_OSS_15.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+        resetLabels([layer_position_eoliennes_14,layer_OSS_15]);
+        map.on("zoomend", function(){
+            resetLabels([layer_position_eoliennes_14,layer_OSS_15]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_position_eoliennes_14,layer_OSS_15]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_position_eoliennes_14,layer_OSS_15]);
+        });
+        </script>
+    </body>
+</html>
